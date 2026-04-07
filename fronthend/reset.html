@@ -1,0 +1,66 @@
+<h2>Forgot Password</h2>
+<input type="email" id="resetEmail" placeholder="Enter your email">
+<button onclick="sendOTP()">Send OTP</button>
+
+<div id="otpSection" style="display:none; margin-top:20px;">
+  <input type="text" id="otp" placeholder="Enter OTP">
+  <input type="password" id="newPassword" placeholder="Enter new password">
+  <button onclick="resetPassword()">Reset Password</button>
+</div>
+
+<script>
+async function sendOTP() {
+  const email = document.getElementById("resetEmail").value;
+
+  if (!email) {
+    alert("Please enter email!");
+    return;
+  }
+
+  const res = await fetch("/forgot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    // If email not found → redirect to signup
+    alert(result.message);
+    if (result.redirect) {
+      window.location.href = result.redirect;
+    }
+  } else {
+    alert(result.message); // OTP sent ✅
+    document.getElementById("otpSection").style.display = "block"; // show OTP + reset section
+  }
+}
+
+async function resetPassword() {
+  const email = document.getElementById("resetEmail").value;
+  const otp = document.getElementById("otp").value;
+  const newPassword = document.getElementById("newPassword").value;
+
+  if (!otp || !newPassword) {
+    alert("Please enter OTP and new password!");
+    return;
+  }
+
+  const res = await fetch("/reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp, newPassword })
+  });
+
+  const result = await res.json();
+
+  if (res.ok) {
+    alert(result.message); 
+    window.location.href = "login.html"; // Redirect after success
+  } else {
+    alert(result.message); // Invalid OTP ❌
+  }
+}
+</script>
+

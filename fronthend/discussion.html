@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Discussion Forum - SSPM LearnHub</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #0b0c2a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; flex: 1; }
+/* Header */
+.header { background: linear-gradient(135deg, #862481, #b84bc4); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center; }
+.header h1 { font-size: 32px; margin-bottom: 10px; }
+.header p { color: #e0e0e0; }
+/* Controls */
+.controls { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; }
+.search-box { flex: 1; min-width: 250px; padding: 12px 20px; border: 2px solid #1e293b; border-radius: 25px; background: #1a1c4d; color: #fff; font-size: 15px; }
+.search-box:focus { outline: none; border-color: #862481; }
+.btn { padding: 12px 25px; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary { background: linear-gradient(135deg, #38bdf8, #862481); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(134, 36, 129, 0.4); }
+.btn-success { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+.btn-sm { padding: 6px 15px; font-size: 13px; border-radius: 15px; }
+/* Discussion Cards */
+.discussions-list { display: flex; flex-direction: column; gap: 15px; }
+.discussion-card { background: #1a1c4d; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; transition: all 0.3s; cursor: pointer; }
+.discussion-card:hover { border-color: #862481; transform: translateX(5px); }
+.discussion-card.solved { border-left: 4px solid #48bb78; }
+.discussion-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; gap: 15px; }
+.discussion-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 5px; line-height: 1.4; }
+.discussion-meta { display: flex; gap: 15px; color: #a0aec0; font-size: 14px; flex-wrap: wrap; }
+.discussion-stats { display: flex; gap: 15px; align-items: center; }
+.stat { display: flex; align-items: center; gap: 5px; color: #a0aec0; font-size: 14px; }
+.tags { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.tag { background: rgba(134, 36, 129, 0.3); color: #e9d5ff; padding: 4px 12px; border-radius: 15px; font-size: 12px; }
+/* Replies Section */
+.replies-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2d3748; }
+.reply-card { background: #0f1135; border-radius: 10px; padding: 15px; margin: 12px 0; border-left: 3px solid #4a5568; }
+.reply-card.best-answer { border-left: 4px solid #48bb78; background: rgba(72, 187, 120, 0.1); }
+.reply-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+.reply-author { font-weight: 600; color: #e2e8f0; }
+.reply-content { color: #cbd5e0; line-height: 1.5; margin: 8px 0; white-space: pre-wrap; }
+.reply-actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.reply-actions button { background: none; border: 1px solid #4a5568; color: #a0aec0; padding: 5px 12px; border-radius: 15px; font-size: 12px; cursor: pointer; }
+.reply-actions button:hover { background: #2d3748; color: #fff; }
+/* Reply Form */
+.reply-form { margin-top: 20px; padding: 20px; background: #1a1c4d; border-radius: 12px; }
+.reply-form textarea { width: 100%; min-height: 100px; padding: 12px; border: 2px solid #2d3748; border-radius: 8px; background: #0f1135; color: #fff; font-size: 15px; resize: vertical; margin-bottom: 10px; }
+.reply-form textarea:focus { outline: none; border-color: #862481; }
+/* Modal */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+.modal.active { display: flex; }
+.modal-content { background: #1a1c4d; border-radius: 15px; padding: 30px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; border: 1px solid #2d3748; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h2 { color: #fff; font-size: 24px; }
+.close-btn { background: none; border: none; color: #fff; font-size: 32px; cursor: pointer; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; color: #e2e8f0; font-weight: 500; }
+.form-group input, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #2d3748; border-radius: 8px; background: #0f1135; color: #fff; font-size: 15px; }
+.form-group textarea { min-height: 150px; resize: vertical; }
+.form-group input:focus, .form-group textarea:focus { outline: none; border-color: #862481; }
+/* Content Warning - VULGAR CONTENT BLOCKING */
+.content-warning { 
+    background: rgba(255, 107, 107, 0.2); 
+    border: 1px solid #ff6b6b; 
+    border-radius: 8px; 
+    padding: 12px 15px; 
+    margin: 10px 0; 
+    color: #ff6b6b; 
+    font-size: 14px; 
+    display: none; 
+    animation: shake 0.5s;
+}
+.content-warning.show { display: block; }
+.content-warning.success { 
+    background: rgba(72, 187, 120, 0.2); 
+    border-color: #48bb78; 
+    color: #48bb78; 
+}
+@keyframes shake { 
+    0%, 100% { transform: translateX(0); } 
+    25% { transform: translateX(-5px); } 
+    75% { transform: translateX(5px); } 
+}
+/* Loading & Empty States */
+.loading { text-align: center; padding: 40px; color: #a0aec0; font-size: 16px; }
+.no-discussions { text-align: center; padding: 60px 20px; color: #a0aec0; }
+.no-discussions h3 { font-size: 24px; margin-bottom: 10px; color: #fff; }
+.error-box { background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; border-radius: 12px; padding: 20px; text-align: center; color: #ff6b6b; }
+/* Back Button */
+.back-btn { display: inline-flex; align-items: center; gap: 8px; background: #2d3748; color: #fff; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; margin-bottom: 20px; }
+.back-btn:hover { background: #4a5568; }
+/* Utilities */
+.hidden { display: none; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.badge.instructor { background: #862481; color: #fff; }
+.best-answer-badge { background: #48bb78; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 600; margin-bottom: 10px; display: inline-block; }
+/* Moderation Info Box */
+.moderation-info {
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid #38bdf8;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    color: #38bdf8;
+    font-size: 13px;
+}
+.moderation-info strong { color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💬 Global Discussion Forum</h1>
+        <p>Ask questions, share knowledge, and learn together!</p>
+    </div>
+
+    <!-- List View -->
+    <div id="listView">
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search discussions..." />
+            <button class="btn btn-primary" onclick="openNewDiscussionModal()">➕ Ask Question</button>
+        </div>
+        <div id="discussionsContainer" class="discussions-list">
+            <div class="loading">Loading discussions...</div>
+        </div>
+    </div>
+
+    <!-- Detail View -->
+    <div id="detailView" class="hidden">
+        <button class="back-btn" onclick="showListView()">← Back to Discussions</button>
+        <div id="discussionDetail"></div>
+        
+        <!-- Reply Form with Vulgar Check -->
+        <div class="reply-form">
+            <h3 style="margin-bottom: 15px; color: #ffb6ff;">💬 Write Your Answer</h3>
+            <div class="moderation-info">
+                <strong>🛡️ Content Moderation:</strong> All posts are scanned for inappropriate language. 
+                Be respectful and helpful to maintain a positive learning environment.
+            </div>
+            <textarea id="replyContent" placeholder="Type your answer here..." oninput="checkReplyContent()"></textarea>
+            <div id="replyWarning" class="content-warning"></div>
+            <button class="btn btn-success" onclick="submitReply()" id="replyBtn">📤 Post Answer</button>
+        </div>
+    </div>
+</div>
+
+<!-- New Discussion Modal with Vulgar Check -->
+<div id="newDiscussionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>❓ Ask a New Question</h2>
+            <button class="close-btn" onclick="closeNewDiscussionModal()">&times;</button>
+        </div>
+        <div class="moderation-info">
+            <strong>🛡️ Content Moderation:</strong> Your question will be scanned for inappropriate language. 
+            Please keep discussions respectful and on-topic.
+        </div>
+        <form id="newDiscussionForm">
+            <div class="form-group">
+                <label for="discTitle">Question Title *</label>
+                <input type="text" id="discTitle" required placeholder="What's your question?" oninput="checkTitleContent()" />
+            </div>
+            <div class="form-group">
+                <label for="discContent">Details *</label>
+                <textarea id="discContent" required placeholder="Provide context..." oninput="checkContentContent()"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="discTags">Tags (comma-separated)</label>
+                <input type="text" id="discTags" placeholder="e.g., javascript, help" />
+            </div>
+            <div id="discWarning" class="content-warning"></div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">📝 Post Question</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// ========== MOCK DATABASE (LOCAL STORAGE) ==========
+const mockDB = {
+    getDiscussions: () => {
+        const data = localStorage.getItem('ssp_discussions');
+        return data ? JSON.parse(data) : [];
+    },
+    saveDiscussion: (disc) => {
+        const discussions = mockDB.getDiscussions();
+        discussions.unshift(disc);
+        localStorage.setItem('ssp_discussions', JSON.stringify(discussions));
+    },
+    getDiscussionById: (id) => {
+        const discussions = mockDB.getDiscussions();
+        return discussions.find(d => d._id === id);
+    },
+    updateDiscussion: (updatedDisc) => {
+        const discussions = mockDB.getDiscussions();
+        const index = discussions.findIndex(d => d._id === updatedDisc._id);
+        if (index !== -1) {
+            discussions[index] = updatedDisc;
+            localStorage.setItem('ssp_discussions', JSON.stringify(discussions));
+        }
+    },
+    addReply: (discId, reply) => {
+        const discussions = mockDB.getDiscussions();
+        const index = discussions.findIndex(d => d._id === discId);
+        if (index !== -1) {
+            if (!discussions[index].replies) discussions[index].replies = [];
+            discussions[index].replies.push(reply);
+            localStorage.setItem('ssp_discussions', JSON.stringify(discussions));
+        }
+    }
+};
+
+// ========== USER STATE ==========
+const currentUser = {
+    id: 'user_123',
+    name: 'Student User',
+    role: 'student' // Change to 'instructor' to test instructor features
+};
+
+let currentDiscussionId = null;
+
+// ========== VULGAR CONTENT BLOCKING SYSTEM ==========
+// Multi-language vulgar words database
+const vulgarWords = {
+    en: [
+        'stupid', 'idiot', 'dumb', 'trash', 'hate', 'damn', 'hell', 'crap', 'suck',
+        'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'piss', 'bullshit', 'wtf',
+        'ugly', 'fat', 'loser', 'worthless', 'pathetic', 'moron', 'retard'
+    ],
+    hi: [
+        'बेवकूफ', 'हरामी', 'कमीना', 'गधा', 'पागल', 'कुत्ता', 'हरामखोर',
+        'चूत', 'लंड', 'गांड', 'भोसड़ी', 'मादरचोद', 'रंडी', 'वेस्वा'
+    ],
+    ta: [
+        'முட்டாள்', 'கழுதை', 'நாய்', 'தாயோளி', 'சண்டாளா'
+    ],
+    te: [
+        'పిచ్చివాడు', 'కుక్క', 'లాగ', 'సిగ్గుమాలిన'
+    ],
+    mr: [
+        'मूर्ख', 'कुत्रा', 'हरामी', 'कमीना'
+    ]
+};
+
+// Detect language from text
+function detectLanguage(text) {
+    if (!text || text.trim().length < 3) return 'en';
+    if (/[\u0900-\u097F]/.test(text)) return 'hi'; // Devanagari (Hindi)
+    if (/[\u0B80-\u0BFF]/.test(text)) return 'ta'; // Tamil
+    if (/[\u0C00-\u0C7F]/.test(text)) return 'te'; // Telugu
+    if (/[\u0D00-\u0D7F]/.test(text)) return 'ml'; // Malayalam
+    if (/[\u0980-\u09FF]/.test(text)) return 'bn'; // Bengali
+    return 'en';
+}
+
+// Check for vulgar content
+function isVulgar(text) {
+    if (!text || text.trim().length < 3) return { isVulgar: false, matchedWords: [], language: 'en' };
+    
+    const lower = text.toLowerCase();
+    const lang = detectLanguage(text);
+    const words = vulgarWords[lang] || vulgarWords.en;
+    const matched = [];
+    
+    // Check language-specific words
+    words.forEach(w => {
+        if (lower.includes(w.toLowerCase())) {
+            matched.push(w);
+        }
+    });
+    
+    // Also check English words for mixed content
+    if (lang !== 'en') {
+        vulgarWords.en.forEach(w => {
+            if (lower.includes(w.toLowerCase()) && !matched.includes(w)) {
+                matched.push(`${w} (en)`);
+            }
+        });
+    }
+    
+    return { 
+        isVulgar: matched.length > 0, 
+        matchedWords: matched, 
+        language: lang 
+    };
+}
+
+// Real-time content checking with debouncing
+let contentCheckTimeouts = {};
+
+function checkContentVulgar(text, warningId, blockPosting = true) {
+    const warningEl = document.getElementById(warningId);
+    if (!warningEl) return true;
+    
+    if (!text || text.trim().length < 3) {
+        warningEl.classList.remove('show', 'success');
+        warningEl.textContent = '';
+        return true;
+    }
+    
+    const result = isVulgar(text);
+    
+    if (result.isVulgar) {
+        warningEl.textContent = `⚠️ BLOCKED: Inappropriate language detected: "${result.matchedWords.join(', ')}". Please revise your content to maintain community standards.`;
+        warningEl.classList.remove('success');
+        warningEl.classList.add('show');
+        return false;
+    } else {
+        warningEl.textContent = '✅ Content looks good!';
+        warningEl.classList.remove('show');
+        warningEl.classList.add('success');
+        setTimeout(() => {
+            warningEl.classList.remove('success');
+            warningEl.textContent = '';
+        }, 3000);
+        return true;
+    }
+}
+
+// Debounced input listeners
+function setupContentChecker(fieldId, warningId) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.addEventListener('input', (e) => {
+            clearTimeout(contentCheckTimeouts[fieldId]);
+            contentCheckTimeouts[fieldId] = setTimeout(() => {
+                checkContentVulgar(e.target.value, warningId);
+            }, 500);
+        });
+    }
+}
+
+// Individual check functions for each field
+function checkTitleContent() {
+    const title = document.getElementById('discTitle').value;
+    checkContentVulgar(title, 'discWarning');
+}
+
+function checkContentContent() {
+    const content = document.getElementById('discContent').value;
+    checkContentVulgar(content, 'discWarning');
+}
+
+function checkReplyContent() {
+    const content = document.getElementById('replyContent').value;
+    checkContentVulgar(content, 'replyWarning');
+}
+
+// ========== VIEW MANAGEMENT ==========
+function showListView() {
+    document.getElementById("listView").classList.remove("hidden");
+    document.getElementById("detailView").classList.add("hidden");
+    currentDiscussionId = null;
+    loadDiscussions();
+}
+
+function showDetailView(discussionId) {
+    document.getElementById("listView").classList.add("hidden");
+    document.getElementById("detailView").classList.remove("hidden");
+    currentDiscussionId = discussionId;
+    loadDiscussionDetail(discussionId);
+}
+
+// ========== LOAD DISCUSSIONS LIST ==========
+function loadDiscussions() {
+    const container = document.getElementById("discussionsContainer");
+    const discussions = mockDB.getDiscussions();
+    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+
+    const filtered = discussions.filter(d => 
+        d.title.toLowerCase().includes(searchTerm) || 
+        d.content.toLowerCase().includes(searchTerm)
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="no-discussions"><h3>📭 No discussions yet</h3><button class="btn btn-primary" onclick="openNewDiscussionModal()" style="margin-top:20px;">➕ Ask a Question</button></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map(disc => `
+        <div class="discussion-card ${disc.isSolved ? 'solved' : ''}" onclick="showDetailView('${disc._id}')">
+            <div class="discussion-header">
+                <div style="flex: 1;">
+                    <div class="discussion-title">${escapeHtml(disc.title)} ${disc.isSolved ? '<span style="color:#48bb78; font-size:12px;">✅ Solved</span>' : ''}</div>
+                    <div class="discussion-meta">
+                        <span>👤 ${escapeHtml(disc.authorName)} ${disc.authorRole === 'instructor' ? '<span class="badge instructor">Instructor</span>' : ''}</span>
+                        <span>📅 ${new Date(disc.createdAt).toLocaleDateString()}</span>
+                        <span>💬 ${disc.replies ? disc.replies.length : 0} Answers</span>
+                    </div>
+                </div>
+            </div>
+            ${disc.tags?.length ? `<div class="tags">${disc.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>` : ''}
+        </div>
+    `).join('');
+}
+
+// ========== LOAD SINGLE DISCUSSION DETAIL ==========
+function loadDiscussionDetail(discussionId) {
+    const detailDiv = document.getElementById("discussionDetail");
+    const disc = mockDB.getDiscussionById(discussionId);
+
+    if (!disc) {
+        detailDiv.innerHTML = `<div class="error-box">Discussion not found</div>`;
+        return;
+    }
+
+    let html = `
+        <div class="discussion-card" style="cursor: default;">
+            <div class="discussion-header">
+                <div style="flex:1;">
+                    <div class="discussion-title" style="font-size: 22px;">${escapeHtml(disc.title)}</div>
+                    <div class="discussion-meta">
+                        <span>👤 ${escapeHtml(disc.authorName)} ${disc.authorRole === 'instructor' ? '<span class="badge instructor">Instructor</span>' : ''}</span>
+                        <span>📅 ${new Date(disc.createdAt).toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
+            <div style="color: #cbd5e0; line-height: 1.6; margin: 15px 0; white-space: pre-wrap;">${escapeHtml(disc.content)}</div>
+            ${disc.tags?.length ? `<div class="tags">${disc.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>` : ''}
+        </div>
+    `;
+
+    if (disc.replies && disc.replies.length > 0) {
+        html += `<div class="replies-section"><h3 style="color: #ffb6ff; margin-bottom: 15px;">💬 ${disc.replies.length} Answers</h3>`;
+        
+        const sortedReplies = [...disc.replies].sort((a, b) => (b.isBestAnswer ? 1 : 0) - (a.isBestAnswer ? 1 : 0));
+
+        sortedReplies.forEach(reply => {
+            html += `
+                <div class="reply-card ${reply.isBestAnswer ? 'best-answer' : ''}">
+                    ${reply.isBestAnswer ? '<div class="best-answer-badge">✅ Best Answer</div>' : ''}
+                    <div class="reply-header">
+                        <div class="reply-author">${escapeHtml(reply.authorName)} ${reply.authorRole === 'instructor' ? '<span class="badge instructor">Instructor</span>' : ''}</div>
+                        <span style="font-size: 12px; color: #a0aec0;">${new Date(reply.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div class="reply-content">${escapeHtml(reply.content)}</div>
+                    <div class="reply-actions">
+                        ${currentUser.role === 'instructor' && !reply.isBestAnswer ? `
+                        <button onclick="markBestAnswer('${disc._id}', '${reply._id}')" style="border-color: #48bb78; color: #48bb78;">⭐ Mark as Best</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    } else {
+        html += `<div class="replies-section" style="text-align: center; padding: 30px; color: #a0aec0;">💡 No answers yet. Be the first to help!</div>`;
+    }
+
+    detailDiv.innerHTML = html;
+}
+
+// ========== CREATE NEW DISCUSSION WITH VULGAR CHECK ==========
+function createDiscussion(e) {
+    e.preventDefault();
+    const title = document.getElementById("discTitle").value.trim();
+    const content = document.getElementById("discContent").value.trim();
+    const tagsInput = document.getElementById("discTags").value.trim();
+
+    if (!title || !content) {
+        alert("⚠️ Title and content are required!");
+        return;
+    }
+
+    // FINAL VULGAR CONTENT CHECK BEFORE POSTING
+    const titleCheck = isVulgar(title);
+    const contentCheck = isVulgar(content);
+
+    if (titleCheck.isVulgar || contentCheck.isVulgar) {
+        const warning = document.getElementById('discWarning');
+        const allMatched = [...new Set([...titleCheck.matchedWords, ...contentCheck.matchedWords])];
+        warning.textContent = `❌ POST BLOCKED: Inappropriate language detected: "${allMatched.join(', ')}". Please remove inappropriate words and try again.`;
+        warning.classList.remove('success');
+        warning.classList.add('show');
+        return; // BLOCK THE POST
+    }
+
+    const newDisc = {
+        _id: 'disc_' + Date.now(),
+        title,
+        content,
+        tags: tagsInput ? tagsInput.split(",").map(t => t.trim()).filter(t => t) : [],
+        authorId: currentUser.id,
+        authorName: currentUser.name,
+        authorRole: currentUser.role,
+        createdAt: new Date().toISOString(),
+        replies: [],
+        isSolved: false,
+        language: detectLanguage(`${title} ${content}`)
+    };
+
+    mockDB.saveDiscussion(newDisc);
+
+    alert("✅ Question posted successfully!");
+    closeNewDiscussionModal();
+    document.getElementById("newDiscussionForm").reset();
+    document.getElementById("discWarning").classList.remove("show");
+    loadDiscussions();
+}
+
+// ========== SUBMIT REPLY WITH VULGAR CHECK ==========
+function submitReply() {
+    if (!currentDiscussionId) return;
+    const content = document.getElementById("replyContent").value.trim();
+    
+    if (!content) {
+        alert("⚠️ Please write your answer before posting");
+        return;
+    }
+
+    // FINAL VULGAR CONTENT CHECK BEFORE POSTING
+    const check = isVulgar(content);
+    if (check.isVulgar) {
+        const warning = document.getElementById('replyWarning');
+        warning.textContent = `❌ REPLY BLOCKED: Inappropriate language detected: "${check.matchedWords.join(', ')}". Please remove inappropriate words and try again.`;
+        warning.classList.remove('success');
+        warning.classList.add('show');
+        return; // BLOCK THE POST
+    }
+
+    const newReply = {
+        _id: 'reply_' + Date.now(),
+        content,
+        authorId: currentUser.id,
+        authorName: currentUser.name,
+        authorRole: currentUser.role,
+        createdAt: new Date().toISOString(),
+        isBestAnswer: false,
+        language: detectLanguage(content)
+    };
+
+    mockDB.addReply(currentDiscussionId, newReply);
+
+    alert("✅ Answer posted successfully!");
+    document.getElementById("replyContent").value = "";
+    document.getElementById("replyWarning").classList.remove("show");
+    loadDiscussionDetail(currentDiscussionId);
+}
+
+// ========== MARK BEST ANSWER (Instructor Only) ==========
+function markBestAnswer(discussionId, replyId) {
+    if (currentUser.role !== 'instructor') {
+        alert("⚠️ Only instructors can mark best answers");
+        return;
+    }
+    if (!confirm("⭐ Mark this as the best answer?")) return;
+
+    const disc = mockDB.getDiscussionById(discussionId);
+    if (disc) {
+        if (disc.replies) {
+            disc.replies.forEach(r => r.isBestAnswer = false);
+        }
+        const reply = disc.replies.find(r => r._id === replyId);
+        if (reply) {
+            reply.isBestAnswer = true;
+            disc.isSolved = true;
+            mockDB.updateDiscussion(disc);
+            alert("✅ Best answer marked!");
+            loadDiscussionDetail(discussionId);
+        }
+    }
+}
+
+// ========== MODAL FUNCTIONS ==========
+function openNewDiscussionModal() {
+    document.getElementById("newDiscussionModal").classList.add("active");
+    document.getElementById("discTitle").focus();
+    document.getElementById("discWarning").classList.remove("show");
+    document.getElementById("discWarning").textContent = '';
+}
+
+function closeNewDiscussionModal() {
+    document.getElementById("newDiscussionModal").classList.remove("active");
+    document.getElementById("newDiscussionForm").reset();
+    document.getElementById("discWarning").classList.remove("show");
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ========== INITIALIZATION ==========
+document.addEventListener("DOMContentLoaded", () => {
+    // Initialize with dummy data if empty
+    if (!localStorage.getItem('ssp_discussions')) {
+        const dummy = [{
+            _id: 'disc_1',
+            title: 'Welcome to the Forum!',
+            content: 'This is a sample discussion. Try posting your own question!',
+            tags: ['welcome', 'guide'],
+            authorName: 'System',
+            authorRole: 'instructor',
+            createdAt: new Date().toISOString(),
+            replies: [],
+            isSolved: false,
+            language: 'en'
+        }];
+        localStorage.setItem('ssp_discussions', JSON.stringify(dummy));
+    }
+    
+    // Setup content checkers for real-time vulgar detection
+    setupContentChecker('discTitle', 'discWarning');
+    setupContentChecker('discContent', 'discWarning');
+    setupContentChecker('replyContent', 'replyWarning');
+    
+    loadDiscussions();
+    document.getElementById("newDiscussionForm").addEventListener("submit", createDiscussion);
+    document.getElementById("searchBox").addEventListener("input", loadDiscussions);
+});
+</script>
+</body>
+</html>

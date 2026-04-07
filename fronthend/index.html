@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SSPM Digital Campus</title>
+
+<style>
+/* ================= RESET ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+body {
+  background: linear-gradient(180deg, #020617, #020617);
+  color: #e5e7eb;
+}
+
+/* ================= TOP BAR ================= */
+.top-bar {
+  background: #020617;
+  padding: 14px 48px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.top-bar h1 {
+  color: #38bdf8;
+  font-size: 26px;
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
+/* ================= COLLEGE HEADER ================= */
+.college-header-container {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 30px;
+  padding: 30px 48px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+}
+
+.college-logo-and-details {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.college-logo-and-details img {
+  height: 90px;
+}
+
+.college-details-text h1 {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.main-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.affiliation {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.contact-info {
+  text-align: right;
+  font-size: 14px;
+  color: #cbd5f5;
+}
+
+.contact-info .call {
+  color: #22d3ee;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* ================= NAVBAR ================= */
+header {
+  background: #020617;
+  padding: 16px 48px;
+  border-bottom: 2px solid #38bdf8;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #e5e7eb;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: 0.25s;
+}
+
+.nav-links a:hover {
+  background: #38bdf8;
+  color: #020617;
+}
+
+/* ================= HERO ================= */
+.herosection {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 50px;
+  padding: 80px 48px;
+  align-items: center;
+  background:
+    linear-gradient(90deg, rgba(2,6,23,0.95), rgba(2,6,23,0.75)),
+    url("images/sspm1.jpeg") center/cover no-repeat;
+}
+
+.tagline h1 {
+  font-size: 44px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.tagline b {
+  color: #38bdf8;
+  font-size: 28px;
+  display: block;
+  margin-top: 10px;
+}
+
+/* ================= SLIDESHOW ================= */
+.slideshow {
+  position: relative;
+  height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.slideshow img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  animation: slide 12s infinite;
+}
+
+.slideshow img:nth-child(1) { animation-delay: 0s; }
+.slideshow img:nth-child(2) { animation-delay: 4s; }
+.slideshow img:nth-child(3) { animation-delay: 8s; }
+
+@keyframes slide {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  30% { opacity: 1; }
+  40% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ================= COURSES ================= */
+.start-learning {
+  padding: 80px 48px;
+  background: #020617;
+}
+
+.start-learning h1 {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 40px;
+  font-weight: 800;
+}
+
+.start-learning span {
+  color: #38bdf8;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 28px;
+}
+
+.course-card {
+  background: linear-gradient(180deg, #020617, #0f172a);
+  border: 1px solid #1e293b;
+  padding: 40px 20px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #e5e7eb;
+  text-decoration: none;
+  transition: 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.course-card:hover {
+  transform: translateY(-6px);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 10px 30px rgba(56,189,248,0.15);
+}
+/* ================= LOGIN POPUP ================= */
+
+.popup{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+
+.popup-content{
+  background:#020617;
+  padding:40px;
+  border-radius:12px;
+  text-align:center;
+  width:320px;
+  border:1px solid #1e293b;
+}
+
+.popup-content h2{
+  color:#38bdf8;
+  margin-bottom:10px;
+}
+
+.popup-content p{
+  color:#cbd5f5;
+  margin-bottom:20px;
+}
+
+.popup-buttons .btn{
+  display:inline-block;
+  padding:10px 18px;
+  margin:5px;
+  background:#38bdf8;
+  color:#020617;
+  text-decoration:none;
+  border-radius:6px;
+  font-weight:600;
+}
+
+.popup-buttons .btn:hover{
+  background:#22d3ee;
+}
+
+/* ================= FOOTER ================= */
+footer {
+  background: #020617;
+  text-align: center;
+  padding: 18px;
+  color: #94a3b8;
+  border-top: 1px solid #1e293b;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <h1>SSPM DIGITAL CAMPUS</h1>
+</div>
+
+<section class="college-header-container">
+  <div class="college-logo-and-details">
+    <img src="images/sspmlogo.png">
+    <div class="college-details-text">
+      <h1>
+        SINDHUDURG SHIKSHAN PRASARAK MANDAL'S<br>
+        <span class="main-name">COLLEGE OF ENGINEERING, KANKAVLI</span><br>
+        <span class="affiliation">
+          Affiliated to Mumbai University · AICTE Approved · NAAC B+
+        </span>
+      </h1>
+    </div>
+  </div>
+
+  <div class="contact-info">
+    <div class="call">Call Us</div>
+    <div>7588505285</div>
+    <div>9049813870</div>
+    <div>9421816280</div>
+  </div>
+</section>
+
+<header>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="login.html">Login</a></li>
+    <li><a href="signup.html">Sign Up</a></li>
+    <li><a href="#">Student</a></li>
+    <li><a href="#">Instructor</a></li>
+  </ul>
+</header>
+
+<section class="herosection">
+  <div class="tagline">
+    <h1>
+      ONLINE LEARNING PLATFORM
+      <b>PROFESSIONAL · TRUSTED · FUTURE-READY</b>
+    </h1>
+  </div>
+
+  <div class="slideshow">
+    <img src="images/sspm1.jpeg">
+    <img src="images/sspm2.jpeg">
+    <img src="images/sspm3.jpeg">
+  </div>
+</section>
+
+<section class="start-learning">
+    <h1>Start <span>Learning</span></h1>
+    <div class="course-grid">
+      <a href="html-course.html" class="course-card">HTML</a>
+      <a href="css-course.html" class="course-card">CSS</a>
+      <a href="javascript-course.html" class="course-card">JavaScript</a>
+      <a href="python-course.html" class="course-card">Python</a>
+      <a href="java-course.html" class="course-card">Java</a>
+      <a href="sql-course.html" class="course-card">SQL</a>
+      <a href="linux-course.html" class="course-card">Linux</a>
+      <a href="cpp-course.html" class="course-card">C++</a>
+      <a href="dsa-course.html" class="course-card">DSA</a>
+    </div>
+</section>
+
+<footer>
+  © 2025 SSPM Digital Campus · All Rights Reserved
+</footer>
+
+</body>
+</html>
+ <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // -----------------------------------
+    // 1️⃣ Detect login status and update navbar
+    // -----------------------------------
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role"); // "student" or "instructor"
+    const navLinks = document.querySelector(".nav-links");
+
+    // Clear old nav items
+    navLinks.innerHTML = "";
+
+    if (token && role === "student") {
+      // ✅ Logged in as Student
+      navLinks.innerHTML = `
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#" onclick="openDashboard()">Student Dashboard</a></li>
+        <li><a href="#" id="logoutBtn">Logout</a></li>
+      `;
+    } else if (token && role === "instructor") {
+      // ✅ Logged in as Instructor
+      navLinks.innerHTML = `
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#" onclick="openDashboard()">Instructor Dashboard</a></li>
+        <li><a href="#" id="logoutBtn">Logout</a></li>
+      `;
+    } else {
+      // ❌ Not logged in
+      navLinks.innerHTML = `
+        <li><a href="index.html">Home</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="signup.html">Sign Up</a></li>
+        <li><a href="#" onclick="alert('Please login or sign up to access Student Dashboard');">Student</a></li>
+        <li><a href="#" onclick="alert('Please login or sign up to access Instructor Dashboard');">Instructor</a></li>
+      `;
+    }
+
+    // -----------------------------------
+    // 2️⃣ Logout functionality
+    // -----------------------------------
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        alert("Logged out successfully!");
+        window.location.href = "index.html";
+      });
+    }
+
+    // -----------------------------------
+    // 3️⃣ Course click popup for non-logged-in users
+    // -----------------------------------
+    // -----------------------------------
+// Course click popup for non-logged-in users
+// -----------------------------------
+const courseCards = document.querySelectorAll(".course-card");
+
+courseCards.forEach(card => {
+  card.addEventListener("click", function (event) {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      event.preventDefault(); // stop page change
+      openPopup();
+    }
+  });
+});
+  });
+   function goHome() {
+  const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    // Not logged in → stay on home
+    return;
+  }
+
+  if (role === "student") {
+    window.location.href = "student-dashboard.html";
+  } else if (role === "instructor") {
+    window.location.href = "instructor-dashboard.html";
+  }
+}
+function openDashboard() {
+  const role = localStorage.getItem("role");
+
+  if (role === "student") {
+    window.location.href = "student-dashboard.html";
+  } else if (role === "instructor") {
+    window.location.href = "instructor-dashboard.html";
+  }
+}
+  // -----------------------------------
+  // 4️⃣ Popup functions
+  // -----------------------------------
+  function openPopup() {
+    document.getElementById("loginPopup").style.display = "flex";
+  }
+
+  function closePopup() {
+    document.getElementById("loginPopup").style.display = "none";
+  }
+
+  // Close popup when clicking outside it
+  window.addEventListener("click", function (event) {
+    const popup = document.getElementById("loginPopup");
+    if (event.target === popup) popup.style.display = "none";
+  });
+</script>
+
+<!-- LOGIN REQUIRED POPUP -->
+<div class="popup" id="loginPopup">
+  <div class="popup-content">
+    <h2>Login Required</h2>
+    <p>You must login or sign up to access this course.</p>
+
+    <div class="popup-buttons">
+      <a href="login.html" class="btn">Login</a>
+      <a href="signup.html" class="btn">Sign Up</a>
+      <br><br>
+      <a href="#" onclick="closePopup()" style="color:#94a3b8;">Cancel</a>
+    </div>
+  </div>
+</div>
+
+
+  
+</body>
+</html>

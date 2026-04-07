@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - SSPM LearnHub</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* Reset */
+    *{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
+    body{background:linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);color:#fff;min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;}
+    header{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:15px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.2);}
+    header h1{font-size:22px;font-weight:bold;color:rgb(20,19,19);letter-spacing:1px;}
+    nav ul{list-style:none;display:flex;gap:20px;}
+    nav ul li a{text-decoration:none;color:rgb(253,250,250);background:rgba(0,0,0,0.3);padding:8px 16px;border-radius:8px;transition:0.3s;}
+    nav ul li a:hover{background:white;color:#6a11cb;}
+    #signup{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-grow:1;text-align:center;padding:40px;}
+    .signup-box{background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:30px 40px;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+    h2{font-size:28px;margin-bottom:10px;}
+    p{color:#e3e3e3;margin-bottom:20px;}
+    .tab-buttons{display:flex;justify-content:center;gap:15px;margin-bottom:25px;}
+    .tab-buttons button{background:rgba(255,255,255,0.2);border:none;color:white;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;transition:0.3s;}
+    .tab-buttons button:hover{background:rgba(255,255,255,0.4);}
+    .tab-buttons button:disabled{opacity:0.6;cursor:not-allowed;}
+    form{display:none;text-align:left;}
+    form.active{display:block;}
+    label{display:block;margin-bottom:5px;font-weight:500;}
+    input,select{width:100%;padding:10px;border:none;border-radius:8px;margin-bottom:15px;background:rgba(255,255,255,0.2);color:#000;outline:none;}
+    input::placeholder{color:rgba(0,0,0,0.6);}
+    button[type="submit"]{background:#ffffff;color:#6a11cb;border:none;padding:10px 20px;width:100%;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.3s;margin-top:10px;}
+    button[type="submit"]:hover{background:#f0f0f0;}
+    button[type="submit"]:disabled{opacity:0.7;cursor:not-allowed;}
+    video{border-radius:10px;width:100%;height:200px;object-fit:cover;background:#000;display:block;margin:10px 0;}
+    canvas{border-radius:10px;margin-top:10px;display:none;}
+    footer{text-align:center;background:rgba(0,0,0,0.2);padding:15px;color:#fff;font-size:14px;}
+    .face-section{margin:15px 0;padding:15px;background:rgba(255,255,255,0.1);border-radius:8px;border:1px solid rgba(255,255,255,0.2);}
+    .face-section label{margin-bottom:10px;display:block;}
+    .face-status{font-size:12px;color:#00ffcc;margin-top:8px;min-height:18px;}
+    .face-status.error{color:#ff6b6b;}
+    .loading-dots::after{content:"";animation:dots 1.5s steps(5,end) infinite;}
+    @keyframes dots{0%,20%{content:"."}40%{content:".."}60%,100%{content:"..."}}
+    .hint{font-size:11px;color:rgba(255,255,255,0.7);margin-top:5px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><h1>SSPM DIGITAL CAMPUS</h1></div>
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section id="signup">
+  <div class="signup-box">
+    <h2>Join SSPM LearnHub</h2>
+    <p>Select your role to create an account</p>
+
+    <div class="tab-buttons">
+      <button onclick="showForm('student')" id="btnStudent">🎓 Student</button>
+      <button onclick="showForm('instructor')" id="btnInstructor">👨‍🏫 Instructor</button>
+    </div>
+
+    <!-- ========== STUDENT FORM ========== -->
+    <form id="studentForm">
+      <h3>Student Registration</h3>
+      <label>Full Name</label>
+      <input type="text" id="studentName" placeholder="Enter your name" required>
+      <label>Email</label>
+      <input type="email" id="studentEmail" placeholder="Enter your email" required>
+      <label>Password</label>
+      <input type="password" id="studentPassword" placeholder="Create password" required minlength="6">
+      <label>Roll Number</label>
+      <input type="text" id="studentRoll" placeholder="Enter roll number" required>
+      <label>Department</label>
+      <select id="studentDept" required>
+        <option value="">--Select Department--</option>
+        <option value="CSE">Computer Science</option>
+        <option value="CE">Computer Engineering</option>
+        <option value="AIML">AI & Machine Learning</option>
+        <option value="MECH">Mechanical</option>
+        <option value="MECHATRONICS">Mechatronics</option>
+        <option value="ELE">Electrical</option>
+      </select>
+      <label>Semester</label>
+      <select id="studentSem" required>
+        <option value="">--Select Semester--</option>
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+
+      <!-- Face Capture Section -->
+      <div class="face-section">
+        <label>🔐 Capture Face (Required for Security)</label>
+        <video id="videoStudent" width="100%" height="200" autoplay playsinline muted></video>
+        <p class="hint">💡 Click the button below to start camera & capture your face</p>
+        <button type="button" id="captureStudentBtn" onclick="captureFace('student')">📸 Capture Face</button>
+        <canvas id="canvasStudent" width="640" height="480"></canvas>
+        <input type="hidden" id="faceDataStudent">
+        <div id="faceStatusStudent" class="face-status"></div>
+      </div>
+      <button type="submit">✅ Register as Student</button>
+    </form>
+
+    <!-- ========== INSTRUCTOR FORM ========== -->
+    <form id="instructorForm">
+      <h3>Instructor Registration</h3>
+      <label>Full Name</label>
+      <input type="text" id="instructorName" placeholder="Enter your name" required>
+      <label>Email</label>
+      <input type="email" id="instructorEmail" placeholder="Enter your email" required>
+      <label>Password</label>
+      <input type="password" id="instructorPassword" placeholder="Create password" required minlength="6">
+      <label>Expertise / Department</label>
+      <input type="text" id="instructorDept" placeholder="E.g. Computer Science, AI, Mechanical" required>
+
+      <!-- Face Capture Section -->
+      <div class="face-section">
+        <label>🔐 Capture Face (Required for Secure Access)</label>
+        <video id="videoInstructor" width="100%" height="200" autoplay playsinline muted></video>
+        <p class="hint">💡 Click the button below to start camera & capture your face</p>
+        <button type="button" id="captureInstructorBtn" onclick="captureFace('instructor')">📸 Capture Face</button>
+        <canvas id="canvasInstructor" width="640" height="480"></canvas>
+        <input type="hidden" id="faceDataInstructor">
+        <div id="faceStatusInstructor" class="face-status"></div>
+      </div>
+      <button type="submit">✅ Register as Instructor</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <p>© 2025 SSPM DIGITAL CAMPUS — All Rights Reserved.</p>
+</footer>
+
+<!-- ✅ FIXED: Removed trailing spaces in URL -->
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<script>
+// ========== UTILITY FUNCTIONS ==========
+function euclideanDistance(arr1, arr2) {
+  if (!arr1 || !arr2 || arr1.length !== arr2.length) return Infinity;
+  let sum = 0;
+  for (let i = 0; i < arr1.length; i++) {
+    sum += Math.pow(arr1[i] - arr2[i], 2);
+  }
+  return Math.sqrt(sum);
+}
+
+async function averageDescriptors(descriptors) {
+  if (descriptors.length === 0) return null;
+  const avg = new Array(128).fill(0);
+  descriptors.forEach(desc => {
+    desc.forEach((val, i) => avg[i] += val);
+  });
+  return avg.map(val => val / descriptors.length);
+}
+
+function updateFaceStatus(role, message, isError) {
+  const statusDiv = document.getElementById(`faceStatus${role.charAt(0).toUpperCase() + role.slice(1)}`);
+  if (statusDiv) {
+    statusDiv.textContent = message;
+    statusDiv.className = `face-status${isError ? ' error' : ''}`;
+  }
+}
+
+// ========== FORM TOGGLE ==========
+function showForm(role) {
+  const studentForm = document.getElementById("studentForm");
+  const instructorForm = document.getElementById("instructorForm");
+  const btnStudent = document.getElementById("btnStudent");
+  const btnInstructor = document.getElementById("btnInstructor");
+  
+  if (role === "student") {
+    studentForm.classList.add("active");
+    instructorForm.classList.remove("active");
+    btnStudent.style.background = "rgba(255,255,255,0.4)";
+    btnInstructor.style.background = "rgba(255,255,255,0.2)";
+  } else {
+    instructorForm.classList.add("active");
+    studentForm.classList.remove("active");
+    btnInstructor.style.background = "rgba(255,255,255,0.4)";
+    btnStudent.style.background = "rgba(255,255,255,0.2)";
+  }
+  // ✅ Don't auto-start camera - wait for user to click capture button
+}
+
+// ========== CAMERA & MODELS ==========
+let modelsLoaded = false;
+let modelLoadPromise = null;
+
+async function loadModels() {
+  if (modelLoadPromise) return modelLoadPromise;
+  
+  const MODEL_URL = window.location.origin + "/models";
+  console.log("🎯 Loading models from:", MODEL_URL);
+  
+  modelLoadPromise = (async () => {
+    try {
+      console.log("📦 Loading face-api models...");
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]);
+      console.log("✅ All models loaded!");
+      modelsLoaded = true;
+      return true;
+    } catch (err) {
+      console.error("❌ Model loading failed:", err);
+      modelsLoaded = false;
+      throw err;
+    }
+  })();
+  
+  return modelLoadPromise;
+}
+
+// ✅ START CAMERA: Called ONLY when user clicks "Capture Face"
+async function startCamera(role) {
+  const video = document.getElementById(`video${role.charAt(0).toUpperCase() + role.slice(1)}`);
+  if (!video) {
+    console.error(`❌ Video element not found for role: ${role}`);
+    throw new Error("Video element not found");
+  }
+  
+  // Stop any existing stream
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
+  
+  try {
+    // 🔥 THIS LINE TRIGGERS THE BROWSER PERMISSION PROMPT 🔥
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        facingMode: "user"
+      },
+      audio: false
+    });
+    
+    video.srcObject = stream;
+    
+    // Wait for video metadata
+    await new Promise((resolve, reject) => {
+      if (video.readyState >= 2) {
+        resolve();
+      } else {
+        video.onloadedmetadata = resolve;
+        video.onerror = reject;
+        setTimeout(resolve, 3000); // Fallback timeout
+      }
+    });
+    
+    // Play video (required for some browsers)
+    await video.play().catch(e => console.warn("⚠️ Video play warning:", e));
+    
+    console.log(`✅ Camera started for ${role}`);
+    return true;
+    
+  } catch (error) {
+    console.error(`❌ Camera error for ${role}:`, error.name, error.message);
+    throw error; // Re-throw for captureFace to handle
+  }
+}
+
+// ✅ STOP CAMERA: Clean up resources
+function stopCamera(role) {
+  const video = document.getElementById(`video${role.charAt(0).toUpperCase() + role.slice(1)}`);
+  if (video?.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+    console.log(`🛑 Camera stopped for ${role}`);
+  }
+}
+
+// ========== LIVENESS CHECK ==========
+async function detectLiveness(video, duration = 3000) {
+  if (!modelsLoaded) {
+    console.warn("⚠️ Models not loaded, skipping liveness check");
+    return true; // Allow fallback
+  }
+  
+  const startTime = Date.now();
+  let validFrames = 0;
+  const requiredFrames = 3;
+  
+  console.log("👤 Checking liveness...");
+  
+  while (Date.now() - startTime < duration) {
+    try {
+      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks();
+      if (detection) {
+        validFrames++;
+        if (validFrames >= requiredFrames) {
+          console.log("✅ Liveness verified!");
+          return true;
+        }
+      }
+    } catch (e) {
+      // Ignore detection errors during liveness
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  console.log(`❌ Liveness check: ${validFrames}/${requiredFrames} frames`);
+  return validFrames >= 2; // Allow 2/3 as fallback
+}
+
+// ✅ FACE CAPTURE: Main function - triggers permission on click
+async function captureFace(role) {
+  const video = document.getElementById(`video${role.charAt(0).toUpperCase() + role.slice(1)}`);
+  const canvas = document.getElementById(`canvas${role.charAt(0).toUpperCase() + role.slice(1)}`);
+  const hiddenInput = document.getElementById(`faceData${role.charAt(0).toUpperCase() + role.slice(1)}`);
+  const captureBtn = document.getElementById(`capture${role.charAt(0).toUpperCase() + role.slice(1)}Btn`);
+  
+  const originalText = captureBtn.innerHTML;
+  const originalBg = captureBtn.style.background;
+  
+  try {
+    // 🔹 STEP 1: Ensure models are loaded
+    updateFaceStatus(role, "📦 Loading face models...", false);
+    captureBtn.disabled = true;
+    captureBtn.innerHTML = "⏳ Loading...";
+    
+    try {
+      await loadModels();
+    } catch (modelErr) {
+      updateFaceStatus(role, "⚠️ Face models unavailable. Proceeding without verification.", true);
+      // Continue without face-api features
+    }
+    
+    // 🔹 STEP 2: Start camera (TRIGGERS PERMISSION PROMPT)
+    updateFaceStatus(role, "🔐 Requesting camera access...", false);
+    captureBtn.innerHTML = "⏳ Allow camera...";
+    
+    await startCamera(role);
+    
+    // 🔹 STEP 3: Liveness Check (if models loaded)
+    if (modelsLoaded) {
+      updateFaceStatus(role, "👤 Looking at camera... (3 sec)", false);
+      captureBtn.innerHTML = "🔄 Verifying...";
+      
+      const isLive = await detectLiveness(video, 3000);
+      if (!isLive) {
+        updateFaceStatus(role, "⚠️ Face not detected clearly. Try better lighting.", true);
+        captureBtn.innerHTML = originalText;
+        captureBtn.style.background = originalBg;
+        captureBtn.disabled = false;
+        return;
+      }
+    }
+    
+    // 🔹 STEP 4: Capture frames
+    updateFaceStatus(role, "🔄 Capturing frames...", false);
+    const descriptors = [];
+    
+    for (let i = 1; i <= 5; i++) {
+      captureBtn.innerHTML = `📸 Frame ${i}/5`;
+      
+      if (modelsLoaded) {
+        try {
+          const detection = await faceapi
+            .detectSingleFace(video)
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+          
+          if (detection?.descriptor) {
+            descriptors.push(Array.from(detection.descriptor));
+          }
+        } catch (e) {
+          console.warn(`Frame ${i} detection warning:`, e.message);
+        }
+      } else {
+        // Fallback: use placeholder descriptor (NOT secure - for testing only)
+        descriptors.push(new Array(128).fill(0).map(() => Math.random() * 0.1));
+      }
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    
+    // 🔹 STEP 5: Validate
+    if (descriptors.length < 2) {
+      updateFaceStatus(role, `❌ Could not capture face. Try again.`, true);
+      captureBtn.innerHTML = "🔄 Retry";
+      captureBtn.disabled = false;
+      return;
+    }
+    
+    // 🔹 STEP 6: Process descriptor
+    updateFaceStatus(role, "🔄 Processing...", false);
+    const averagedDescriptor = await averageDescriptors(descriptors);
+    
+    // 🔹 STEP 7: Save
+    hiddenInput.value = JSON.stringify(averagedDescriptor);
+    
+    // 🔹 STEP 8: Visual feedback
+    if (modelsLoaded) {
+      const displaySize = { width: video.videoWidth, height: video.videoHeight };
+      faceapi.matchDimensions(canvas, displaySize);
+      const detections = await faceapi.detectAllFaces(video).withFaceLandmarks();
+      const resized = faceapi.resizeResults(detections, displaySize);
+      
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      faceapi.draw.drawFaceLandmarks(canvas, resized);
+      canvas.style.display = "block";
+    }
+    
+    // 🔹 STEP 9: Success
+    updateFaceStatus(role, "✅ Face captured! You can now register.", false);
+    captureBtn.innerHTML = "✅ Captured";
+    captureBtn.style.background = "#00ffcc";
+    captureBtn.style.color = "#000";
+    
+    // Optional: Stop camera after capture
+    // stopCamera(role);
+    
+    console.log(`✅ Face captured for ${role}:`, {
+      length: averagedDescriptor?.length,
+      sample: averagedDescriptor?.slice(0, 3).map(v => v?.toFixed(3))
+    });
+    
+  } catch (err) {
+    console.error(`❌ Capture error for ${role}:`, err);
+    
+    let message = "❌ Camera error";
+    if (err.name === "NotAllowedError") {
+      message = "🚫 Camera permission denied. Enable in browser settings.";
+    } else if (err.name === "NotFoundError") {
+      message = "📷 No camera found on this device.";
+    } else if (err.name === "NotReadableError") {
+      message = "🔒 Camera busy. Close other apps using camera.";
+    } else if (err.name === "OverconstrainedError") {
+      message = "⚙️ Camera settings error. Try default camera.";
+    } else if (err.message?.includes("face-api")) {
+      message = "⚠️ Face detection failed. Ensure good lighting.";
+    }
+    
+    updateFaceStatus(role, message, true);
+    captureBtn.innerHTML = "🔄 Retry Capture";
+    captureBtn.style.background = originalBg;
+    
+  } finally {
+    captureBtn.disabled = false;
+  }
+}
+
+// ========== FORM SUBMISSION: INSTRUCTOR ==========
+document.getElementById("instructorForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const faceData = document.getElementById("faceDataInstructor").value;
+  if (!faceData) {
+    alert("⚠️ Please capture your face before registering as an instructor");
+    updateFaceStatus('instructor', "⚠️ Face capture required for security!", true);
+    return;
+  }
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerText;
+  submitBtn.disabled = true;
+  submitBtn.innerText = "🔄 Registering...";
+  
+  try {
+    const data = {
+      name: document.getElementById("instructorName").value,
+      email: document.getElementById("instructorEmail").value,
+      password: document.getElementById("instructorPassword").value,
+      department: document.getElementById("instructorDept").value,
+      role: "instructor",
+      faceDescriptor: JSON.parse(faceData)
+    };
+
+    const res = await fetch("/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    
+    if (res.ok) {
+      alert("🎉 Instructor registration successful! You can now login.");
+      window.location.href = "instructor.html"; 
+    } else {
+      alert("❌ " + result.message);
+    }
+  } catch (err) {
+    console.error("Instructor registration error:", err);
+    alert("❌ Network error. Please try again.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = originalText;
+  }
+});
+
+// ========== FORM SUBMISSION: STUDENT ==========
+document.getElementById("studentForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const faceData = document.getElementById("faceDataStudent").value;
+  if (!faceData) {
+    alert("⚠️ Please capture your face before registering as a student");
+    updateFaceStatus('student', "⚠️ Face capture required!", true);
+    return;
+  }
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerText;
+  submitBtn.disabled = true;
+  submitBtn.innerText = "🔄 Registering...";
+  
+  try {
+    const data = {
+      name: document.getElementById("studentName").value,
+      email: document.getElementById("studentEmail").value,
+      password: document.getElementById("studentPassword").value,
+      roll: document.getElementById("studentRoll").value,
+      department: document.getElementById("studentDept").value,
+      semester: document.getElementById("studentSem").value,
+      role: "student",
+      faceDescriptor: JSON.parse(faceData)
+    };
+
+    const res = await fetch("/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    
+    if (res.ok) {
+      alert("🎉 Student registration successful! You can now login.");
+      window.location.href = "student.html"; 
+    } else {
+      alert("❌ " + result.message);
+    }
+  } catch (err) {
+    console.error("Student registration error:", err);
+    alert("❌ Network error. Please try again.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = originalText;
+  }
+});
+
+// ========== INITIALIZATION ==========
+document.addEventListener("DOMContentLoaded", async () => {
+  // Show student form by default (NO camera auto-start)
+  showForm("student");
+  
+  // Load models in background (no camera dependency)
+  loadModels().then(() => {
+    console.log("✅ Face recognition models ready");
+    ['student', 'instructor'].forEach(role => {
+      const status = document.getElementById(`faceStatus${role.charAt(0).toUpperCase() + role.slice(1)}`);
+      if (status && !status.textContent) {
+        status.textContent = "🎯 Click 'Capture Face' to begin";
+        status.className = "face-status";
+      }
+    });
+  }).catch(err => {
+    console.error("❌ Model loading failed:", err);
+    // Don't block registration - allow fallback
+  });
+  
+  // Cleanup: Stop cameras when page unloads
+  window.addEventListener("beforeunload", () => {
+    ['student', 'instructor'].forEach(role => stopCamera(role));
+  });
+  
+  // Handle tab visibility (optional cleanup)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      ['student', 'instructor'].forEach(role => {
+        const video = document.getElementById(`video${role.charAt(0).toUpperCase() + role.slice(1)}`);
+        if (video?.srcObject) {
+          // Pause but don't stop - resume on return
+          video.pause();
+        }
+      });
+    }
+  });
+  
+  // Debug helper (remove in production)
+  window.debugCamera = async (role) => {
+    console.log("🔍 Debug info for", role);
+    console.log("  - modelsLoaded:", modelsLoaded);
+    console.log("  - mediaDevices:", !!navigator.mediaDevices);
+    console.log("  - secure context:", location.protocol === "https:" || location.hostname === "localhost");
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log("  - video devices:", devices.filter(d => d.kind === "videoinput").map(d => d.label));
+    } catch(e) {
+      console.log("  - enumerateDevices error:", e.message);
+    }
+  };
+});
+</script>
+
+</body>
+</html>
+
+
+

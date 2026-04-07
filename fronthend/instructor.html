@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Instructor Dashboard - SSPM</title>
+
+<style>
+  body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#0b0c2a; color:#fff; }
+  .sidebar { width:220px; background:#862481; position:fixed; top:0; left:0; height:100vh; padding:20px 10px; display:flex; flex-direction:column; gap:20px; box-shadow: 2px 0 10px rgba(0,0,0,0.5); z-index: 100; }
+  .sidebar h2 { text-align:center; font-size:18px; margin-bottom:30px; color:#00ffcc; text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar button, .sidebar a { background:none; border:none; color:white; display:flex; align-items:center; gap:10px; padding:12px; border-radius:8px; transition:0.3s; cursor:pointer; font:inherit; text-align:left; text-decoration:none; width:100%; font-size: 15px; }
+  .sidebar button:hover, .sidebar a:hover { background:#943bcf; color:#000; transform: translateX(5px); }
+  
+  .main { margin-left:240px; padding:30px; max-width: 1200px; }
+  .hidden { display:none; }
+  
+  .section-card { 
+    background:#1a1c4d; 
+    border-radius:15px; 
+    padding:30px; 
+    margin-bottom:30px; 
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    border: 1px solid rgba(134, 36, 129, 0.3);
+  }
+  
+  h1,h2,h3,h4 { color:#ffb6ff; margin:0 0 20px 0; }
+  h2 { border-bottom: 2px solid #862481; padding-bottom: 10px; display: inline-block; }
+  
+  label { margin-top:15px; display:block; font-weight: 600; color: #ccc; }
+  
+  form input, form textarea, form select { 
+    width:100%; 
+    margin-top:8px; 
+    padding:12px; 
+    border-radius:8px; 
+    border:1px solid #444; 
+    background: #0f1135;
+    color:#fff; 
+    outline:none; 
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  form input:focus, form textarea:focus, form select:focus {
+    border-color: #862481;
+    box-shadow: 0 0 8px rgba(134, 36, 129, 0.5);
+  }
+
+  /* Buttons */
+  .action-btn { 
+    width:100%; 
+    background:linear-gradient(135deg,#862481,#b84bc4); 
+    border:none; 
+    color:white; 
+    padding:14px; 
+    border-radius:8px; 
+    font-size:16px; 
+    font-weight: bold;
+    cursor:pointer; 
+    text-align:center; 
+    margin-top: 20px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(134, 36, 129, 0.4);
+  }
+  .action-btn:hover { opacity:0.9; transform: translateY(-2px); }
+  .action-btn:active { transform: translateY(0); }
+
+  /* Dynamic Question Boxes */
+  .question-box { 
+    background:#0f1135; 
+    border: 1px solid #2a2d5e;
+    border-radius:10px; 
+    padding:20px; 
+    margin-top:20px; 
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .option-group { margin-top: 10px; display: flex; gap: 10px; align-items: center; }
+  .option-group input[type="text"] { flex: 1; }
+  .option-group input[type="radio"] { width: auto; margin: 0; transform: scale(1.2); accent-color: #862481; }
+  .correct-label { color: #00ff88; font-size: 12px; font-weight: bold; margin-left: 5px; white-space: nowrap; }
+
+  table { width:100%; border-collapse:collapse; background:#1a1c4d; margin-top: 15px; }
+  th, td { padding:12px; border:1px solid #444; text-align:center; }
+  th { background:#862481; color:#fff; }
+  
+  #editModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999; backdrop-filter: blur(5px); }
+  #editModal > div { width:500px; max-width: 90%; background:#1a1c4d; padding:30px; border-radius:15px; color:#fff; border: 1px solid #862481; }
+  
+  .result-div { background:#0f1135; padding:15px; margin:10px 0; border-radius:8px; display:none; border-left: 4px solid #00ff88; }
+  .result-div p { margin: 5px 0; font-size: 14px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { width: 70px; padding: 20px 5px; }
+    .sidebar h2, .sidebar span { display: none; }
+    .sidebar button, .sidebar a { justify-content: center; padding: 15px 0; }
+    .main { margin-left: 70px; padding: 15px; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <h2>SSPM<br><span style="font-size:12px; color:#fff;">Digital Campus</span></h2>
+    <button onclick="showSection('coursesSection')">🎓 <span>Courses</span></button>
+    <button onclick="showSection('quizSection')">🧠 <span>Quizzes</span></button>
+    <button onclick="showSection('assignmentSection')">📑 <span>Assignments</span></button>
+    <button onclick="showSection('progressSection')">📊 <span>Progress</span></button>
+    <button onclick="showSection('myUploadsSection')">📤 <span>My Uploads</span></button>
+    <button onclick="showSection('removeSection')">❌ <span>Remove Students</span></button>
+    <button onclick="window.location.href='discussion.html'">💬 <span>Forum</span></button>
+    <a href="login.html">🚪 <span>Logout</span></a>
+  </div>
+
+  <div class="main">
+    <!-- Courses -->
+    <div id="coursesSection" class="section-card">
+      <h2>🎓 Manage Courses</h2>
+      <form id="courseForm">
+        <label>Course Title</label>
+        <input id="courseTitle" required placeholder="e.g., Introduction to Cyber Security">
+        <label>Module Code</label>
+        <input id="courseModule" required placeholder="e.g., CS101">
+        <label>Description</label>
+        <textarea id="courseDesc" rows="5" required placeholder="Enter course details..."></textarea>
+        <label>Image URL</label>
+        <input id="courseImg" placeholder="https://example.com/image.jpg">
+        <label>Video URL (optional)</label>
+        <input type="text" id="courseVideoUrl" placeholder="https://youtube.com/...">
+        <label>OR Upload Video File</label>
+        <input type="file" id="courseVideoFile" accept="video/*">
+        <button type="submit" class="action-btn">Add Course</button>
+      </form>
+    </div>
+
+    <!-- Quizzes -->
+    <div id="quizSection" class="section-card hidden">
+      <h2>🧠 Create Quiz</h2>
+      <form id="quizForm">
+        <label>Quiz Title</label>
+        <input type="text" id="quizTitle" required placeholder="e.g., Midterm Exam">
+        <label>Associated Course</label>
+        <input type="text" id="quizCourse" required placeholder="e.g., CS101">
+        <label>Department</label>
+        <select id="quizDepartment" required>
+          <option value="">Select Department</option>
+          <option value="CSE">CSE</option>
+          <option value="CE">CE</option>
+          <option value="AIML">AIML</option>
+          <option value="MECH">MECH</option>
+          <option value="Mechatronics">Mechatronics</option>
+          <option value="ELE">ELE</option>
+        </select>
+        <label>Semester</label>
+        <select id="quizSemester" required>
+          <option value="">Select Semester</option>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option>
+        </select>
+        <label>Number of Questions</label>
+        <input type="number" id="quizQuestions" min="1" max="50" required placeholder="How many questions?">
+        
+        <button type="button" class="action-btn" onclick="generateQuestions()">✨ Create Question Fields</button>
+      </form>
+
+      <!-- Dynamic Questions Container -->
+      <div id="questionSection"></div>
+      
+      <button type="button" id="submitQuizBtn" class="action-btn hidden" onclick="submitQuiz()">🚀 Submit Final Quiz</button>
+    </div>
+
+    <!-- Assignments -->
+    <div id="assignmentSection" class="section-card hidden">
+      <h2>📑 Create Assignment</h2>
+      <form id="assignmentForm">
+        <label>Assignment Title</label>
+        <input id="assignmentTitle" required>
+        <label>Description</label>
+        <textarea id="assignmentDesc" rows="5" required></textarea>
+        <label>Deadline</label>
+        <input type="date" id="assignmentDue" required>
+        <label>Department</label>
+        <input id="instructorDepartment" required>
+        <label>Semester</label>
+        <input type="number" id="instructorSemester" required>
+        <button type="submit" class="action-btn">Add Assignment</button>
+      </form>
+    </div>
+
+    <!-- Progress -->
+    <div id="progressSection" class="section-card hidden">
+      <h2>📊 Student Quiz Progress</h2>
+      <div id="instructor-quizzes">
+        <p>Loading quizzes...</p>
+      </div>
+    </div>
+
+    <!-- My Uploads -->
+    <div id="myUploadsSection" class="section-card hidden">
+      <h2>📤 My Uploads</h2>
+      <div id="uploadsContainer">
+        <p>Loading uploads...</p>
+      </div>
+    </div>
+
+    <!-- Edit Upload Modal -->
+    <div id="editModal">
+      <div>
+        <h3>Edit Upload</h3>
+        <label>Title</label>
+        <input type="text" id="editTitle" placeholder="Title">
+        <label>Description</label>
+        <textarea id="editDesc" rows="5"></textarea>
+        <label>Upload new video (optional)</label>
+        <input type="file" id="editVideo" accept="video/*">
+        <button class="action-btn" onclick="submitEdit()">Save Changes</button>
+        <button class="action-btn" onclick="closeEditModal()" style="background:#444; margin-top:10px;">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Remove Students -->
+    <div id="removeSection" class="section-card hidden">
+      <h2>❌ Remove Students</h2>
+      <p>Student management functionality will be implemented here.</p>
+    </div>
+  </div>
+
+<script>
+// ========== AUTH CHECK ==========
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+const API_BASE = "http://localhost:5000"; // Change if needed
+
+if(!token || role !== "instructor"){ 
+  alert("Access Denied: Instructor privileges required."); 
+  location.href="login.html"; 
+}
+
+// ========== NAVIGATION ==========
+function showSection(id){
+  document.querySelectorAll(".main > div").forEach(s => s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  
+  if(id === "myUploadsSection") loadMyUploads();
+  if(id === "progressSection") loadInstructorQuizzes();
+}
+
+// ========== QUIZ CREATION LOGIC (FIXED) ==========
+let generatedQuestionsCount = 0;
+
+function generateQuestions() {
+  const countInput = document.getElementById('quizQuestions');
+  const count = parseInt(countInput.value);
+  const container = document.getElementById('questionSection');
+  const submitBtn = document.getElementById('submitQuizBtn');
+
+  if (!count || count < 1 || count > 50) {
+    alert("Please enter a valid number of questions (1-50).");
+    return;
+  }
+
+  // Clear previous if any
+  container.innerHTML = '';
+  generatedQuestionsCount = count;
+
+  for (let i = 0; i < count; i++) {
+    const qBox = document.createElement('div');
+    qBox.className = 'question-box';
+    qBox.innerHTML = `
+      <h4>Question ${i + 1}</h4>
+      <label>Question Text</label>
+      <input type="text" class="q-text" placeholder="Enter question here..." required>
+      
+      <label>Options (Select the correct answer)</label>
+      <div class="option-group">
+        <input type="radio" name="q${i}_correct" value="0" checked>
+        <input type="text" class="q-opt" placeholder="Option A">
+        <span class="correct-label">✓ Correct</span>
+      </div>
+      <div class="option-group">
+        <input type="radio" name="q${i}_correct" value="1">
+        <input type="text" class="q-opt" placeholder="Option B">
+      </div>
+      <div class="option-group">
+        <input type="radio" name="q${i}_correct" value="2">
+        <input type="text" class="q-opt" placeholder="Option C">
+        <span class="correct-label">✓ Correct</span>
+      </div>
+      <div class="option-group">
+        <input type="radio" name="q${i}_correct" value="3">
+        <input type="text" class="q-opt" placeholder="Option D">
+      </div>
+    `;
+    container.appendChild(qBox);
+  }
+
+  // Show submit button
+  submitBtn.classList.remove('hidden');
+  submitBtn.scrollIntoView({ behavior: 'smooth' });
+  
+  alert(`✅ Generated ${count} question fields. Please fill them in.`);
+}
+
+async function submitQuiz() {
+  const title = document.getElementById('quizTitle').value;
+  const course = document.getElementById('quizCourse').value;
+  const dept = document.getElementById('quizDepartment').value;
+  const sem = document.getElementById('quizSemester').value;
+  
+  if(!title || !course || !dept || !sem) {
+    alert("Please fill in all quiz details (Title, Course, Dept, Semester).");
+    return;
+  }
+
+  const questions = [];
+  const qBoxes = document.querySelectorAll('.question-box');
+
+  qBoxes.forEach((box, index) => {
+    const qText = box.querySelector('.q-text').value.trim();
+    const options = Array.from(box.querySelectorAll('.q-opt')).map(inp => inp.value.trim());
+    const correctIndex = box.querySelector('input[type="radio"]:checked')?.value;
+
+    if(!qText || options.some(o => !o)) {
+      alert(`Question ${index + 1} is incomplete. Please fill all fields.`);
+      throw new Error("Incomplete question");
+    }
+
+    questions.push({
+      question: qText,
+      options: options,
+      answer: options[parseInt(correctIndex)] // Store the actual answer text
+    });
+  });
+
+  const quizData = {
+    title,
+    course,
+    department: dept,
+    semester: sem,
+    questions
+  };
+
+  console.log("Submitting Quiz:", quizData);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/create-quiz`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(quizData)
+    });
+
+    const result = await res.json();
+    
+    if(res.ok) {
+      alert("✅ Quiz created successfully!");
+      document.getElementById('quizForm').reset();
+      document.getElementById('questionSection').innerHTML = '';
+      document.getElementById('submitQuizBtn').classList.add('hidden');
+      generatedQuestionsCount = 0;
+    } else {
+      alert("❌ Error: " + (result.message || "Failed to create quiz"));
+    }
+  } catch (err) {
+    console.error(err);
+    alert("❌ Network error. Is the backend running?");
+  }
+}
+
+// ========== COURSE UPLOAD (FIXED) ==========
+document.getElementById("courseForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  
+  const title = document.getElementById("courseTitle").value;
+  const module = document.getElementById("courseModule").value;
+  const desc = document.getElementById("courseDesc").value;
+  const img = document.getElementById("courseImg").value;
+  const videoUrl = document.getElementById("courseVideoUrl").value;
+  const videoFile = document.getElementById("courseVideoFile").files[0];
+
+  if(!title || !desc){ 
+    alert("Title and description are required ❌"); 
+    return; 
+  }
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("module", module);
+  formData.append("description", desc);
+  formData.append("img", img);
+  if(videoUrl) formData.append("videoUrl", videoUrl);
+  if(videoFile) formData.append("videoFile", videoFile);
+
+  const btn = this.querySelector('button[type="submit"]');
+  const originalText = btn.textContent;
+  btn.textContent = "Uploading...";
+  btn.disabled = true;
+
+  try{
+    const res = await fetch(`${API_BASE}/api/add-course-upload`, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token },
+      body: formData
+    });
+    const data = await res.json();
+    
+    if(!res.ok){ 
+      throw new Error(data.message || "Failed to add course"); 
+    }
+    
+    alert("✅ Course uploaded successfully!");
+    this.reset();
+  } catch(err){ 
+    console.error(err); 
+    alert("Server error: " + err.message); 
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+});
+
+// ========== ASSIGNMENT UPLOAD (FIXED) ==========
+document.getElementById("assignmentForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  
+  const data = {
+    title: document.getElementById("assignmentTitle").value,
+    description: document.getElementById("assignmentDesc").value,
+    dueDate: document.getElementById("assignmentDue").value,
+    department: document.getElementById("instructorDepartment").value,
+    semester: document.getElementById("instructorSemester").value
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/create-assignment`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token 
+      },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await res.json();
+    if(res.ok) {
+      alert("✅ Assignment created successfully!");
+      this.reset();
+    } else {
+      alert("❌ Error: " + result.message);
+    }
+  } catch(err) {
+    console.error(err);
+    alert("Network error creating assignment.");
+  }
+});
+
+// ========== PROGRESS & UPLOADS (EXISTING LOGIC KEPT) ==========
+async function loadInstructorQuizzes() {
+  const container = document.getElementById("instructor-quizzes");
+  container.innerHTML = "<p>Loading quizzes...</p>";
+
+  try {
+    const res = await fetch(`${API_BASE}/api/instructor-quizzes-with-results`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const data = await res.json();
+    container.innerHTML = "";
+    
+    if(!data.quizzes || data.quizzes.length === 0){
+      container.innerHTML = "<p>No quizzes found.</p>";
+      return;
+    }
+
+    data.quizzes.forEach(quiz => {
+      const btn = document.createElement("button");
+      btn.className = "action-btn";
+      btn.style.marginBottom = "10px";
+      btn.textContent = `📝 ${quiz.title} (${quiz.department})`;
+
+      const resultDiv = document.createElement("div");
+      resultDiv.className = "result-div";
+
+      const matchedResults = (data.results || []).filter(r => r.quizId.toString() === quiz._id.toString());
+
+      if(matchedResults.length > 0){
+        matchedResults.forEach(r=>{
+          const p = document.createElement("p");
+          p.textContent = `👤 ${r.studentId?.name || 'Unknown'} | Score: ${r.score}/${r.total} | Attempt: ${r.attempt || 1}`;
+          resultDiv.appendChild(p);
+        });
+      } else {
+        resultDiv.innerHTML = "<p style='color:#aaa'>No attempts yet.</p>";
+      }
+
+      btn.addEventListener("click", () => {
+        const isHidden = resultDiv.style.display === "none" || resultDiv.style.display === "";
+        resultDiv.style.display = isHidden ? "block" : "none";
+        btn.textContent = isHidden ? `🔼 Hide ${quiz.title}` : `📝 ${quiz.title}`;
+      });
+
+      container.appendChild(btn);
+      container.appendChild(resultDiv);
+    });
+
+  } catch(err){
+    console.error(err);
+    container.innerHTML = "<p style='color:#ff4d4d'>Failed to load quizzes. Ensure backend is running.</p>";
+  }
+}
+
+let currentEditId = null;
+
+async function loadMyUploads() {
+  const container = document.getElementById("uploadsContainer");
+  container.innerHTML = "<p>Loading uploads...</p>";
+  try {
+    const res = await fetch(`${API_BASE}/api/my-uploads`, {
+      headers: { Authorization: "Bearer " + token },
+    });
+    const data = await res.json();
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = "<p>No uploads yet.</p>";
+      return;
+    }
+    
+    container.innerHTML = "";
+    data.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "section-card";
+      div.style.border = "1px solid #333";
+      
+      const safeDesc = item.description ? item.description.replace(/"/g, "&quot;") : "No description";
+      
+      div.innerHTML = `
+        <h4 style="color:#00ffcc">${item.title || "Untitled"}</h4>
+        <div style="line-height:1.6; color:#ddd; margin-bottom:15px;">${safeDesc}</div>
+        ${item.video ? `<a href="${API_BASE}${item.video}" target="_blank" style="color:#862481; font-weight:bold;">▶ View Video</a><br>` : ""}
+        ${item.resources ? `<a href="${item.resources}" target="_blank" style="color:#862481; font-weight:bold;">📄 View Resource</a><br>` : ""}
+        <button class="action-btn" style="padding:8px; font-size:14px; margin-top:10px; background:#444;">✏️ Edit</button>
+      `;
+      
+      div.querySelector("button").addEventListener("click", () => {
+        openEditModal(item._id, item.title, item.description || "");
+      });
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p style='color:#ff4d4d'>Failed to load uploads.</p>";
+  }
+}
+
+function openEditModal(id, title, desc) {
+  currentEditId = id;
+  document.getElementById("editTitle").value = title;
+  document.getElementById("editDesc").value = desc;
+  document.getElementById("editModal").style.display = "flex";
+}
+
+function closeEditModal(){ 
+  document.getElementById("editModal").style.display = "none"; 
+  currentEditId = null; 
+}
+
+async function submitEdit(){
+  if(!currentEditId) return;
+  
+  const title = document.getElementById("editTitle").value;
+  const desc = document.getElementById("editDesc").value;
+  const videoFile = document.getElementById("editVideo").files[0];
+  
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("description", desc);
+  if(videoFile) formData.append("video", videoFile);
+
+  const btn = document.querySelector("#editModal button.onclick='submitEdit()'");
+  if(btn) { btn.textContent = "Saving..."; btn.disabled = true; }
+
+  try{
+    const res = await fetch(`${API_BASE}/api/my-uploads/${currentEditId}`, {
+      method: "PUT",
+      headers: { Authorization: "Bearer "+token },
+      body: formData
+    });
+    const data = await res.json();
+    alert(data.message || "Upload updated successfully!");
+    closeEditModal();
+    loadMyUploads();
+  } catch(err){
+    console.error(err);
+    alert("Failed to update upload ❌");
+  } finally {
+    if(btn) { btn.textContent = "Save Changes"; btn.disabled = false; }
+  }
+}
+
+// Initialize Progress Tab on Load
+document.addEventListener("DOMContentLoaded", () => { 
+  // Optional: Auto-load progress if needed, currently loads on click
+});
+</script>
+</body>
+</html>

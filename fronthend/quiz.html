@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SSPM Quiz - Face Verified</title>
+
+<!-- Face API -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #0b0c2a;
+  color: white;
+}
+
+.quiz-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #1a1c4d;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timer {
+  background: #ff4d4d;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.question {
+  margin-top: 25px;
+  font-size: 20px;
+}
+
+.option {
+  display: block;
+  background: #0f1135;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.option:hover {
+  background: #862481;
+}
+
+.option input {
+  margin-right: 10px;
+}
+
+button {
+  margin-top: 25px;
+  background: linear-gradient(135deg, #ff6fff, #862481);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.result {
+  text-align: center;
+  font-size: 22px;
+}
+
+/* 🔐 Face Verification Overlay */
+#faceVerification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#faceVerification video {
+  width: 320px;
+  height: 240px;
+  border: 3px solid #862481;
+  border-radius: 10px;
+  margin: 20px;
+}
+
+#faceVerification p {
+  font-size: 18px;
+  color: #fff;
+  text-align: center;
+}
+
+#faceVerification .status {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #00ff88;
+}
+
+#faceVerification .error {
+  color: #ff4d4d;
+}
+
+/* Hidden video for background verification */
+#bgVideo {
+  display: none;
+}
+
+/* ✅ Animation for results */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 Face Verification Overlay (shown at start) -->
+<div id="faceVerification">
+  <h3>🔐 Identity Verification</h3>
+  <p>Please look at the camera to verify your identity</p>
+  <video id="verifyVideo" autoplay playsinline></video>
+  <div class="status" id="verifyStatus">Loading face models...</div>
+</div>
+
+<!-- Hidden video for periodic verification -->
+<video id="bgVideo" autoplay playsinline style="display:none;"></video>
+
+<div class="quiz-container">
+  <div class="quiz-header">
+    <h2 id="quizTitle">Loading Quiz...</h2>
+    <div class="timer" id="timer">⏱ 00:00</div>
+  </div>
+
+  <div id="quizBody"></div>
+  <button id="submitBtn">Submit Quiz</button>
+  
+  <!-- ✅ Results container (must exist for script to work) -->
+  <div id="result" class="result"></div>
+  
+  <!-- 🔐 Live verification status -->
+  <div style="margin-top:20px; text-align:center; font-size:14px; color:#aaa;">
+    🔐 Face verification: <span id="liveVerifyStatus">Active</span>
+  </div>
+</div>
+ 
+<script>
+// ========== CONFIG ==========
+const MODEL_URL = window.location.origin + "/models";
+const VERIFY_INTERVAL = 30000; // Verify every 30 seconds
+const VERIFICATION_THRESHOLD = 0.6; // Face match threshold
+
+// ========== GLOBAL VARIABLES ==========
+const params = new URLSearchParams(window.location.search);
+const quizId = params.get("quizId");
+const token = localStorage.getItem("token");
+const studentEmail = localStorage.getItem("email") || decodeJWT(token)?.email;
+let quizData;
+let answers = {};
+let timeLeft = 300;
+let verifyInterval;
+let faceModelsLoaded = false;
+let timerInterval; // Declare globally so we can clear it
+
+// ========== JWT DECODE HELPER ==========
+function decodeJWT(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return {};
+  }
+}
+
+// ✅ NEW: Function to go back to dashboard (defined early for scope safety)
+function goToDashboard() {
+  console.log("🚀 Redirecting to dashboard...");
+  
+  // Clean up all intervals
+  if (typeof timerInterval !== 'undefined') clearInterval(timerInterval);
+  if (typeof verifyInterval !== 'undefined') clearInterval(verifyInterval);
+  
+  // Stop any remaining video streams
+  ["verifyVideo", "bgVideo"].forEach(id => {
+    const video = document.getElementById(id);
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+    }
+  });
+  
+  // Redirect to student dashboard
+  window.location.href = "/student.html";
+}
+
+// ========== LOAD FACE MODELS ==========
+async function loadFaceModels() {
+  try {
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    console.log("✅ Face models loaded for quiz verification");
+    faceModelsLoaded = true;
+    return true;
+  } catch (err) {
+    console.error("❌ Failed to load face models:", err);
+    document.getElementById("verifyStatus").innerHTML = 
+      "❌ Model error. <a href='#' onclick='location.reload()'>Retry</a>";
+    return false;
+  }
+}
+
+// ========== START CAMERA ==========
+async function startCamera(videoElement) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 320, height: 240 }
+    });
+    videoElement.srcObject = stream;
+    return true;
+  } catch (err) {
+    console.error("❌ Camera error:", err);
+    alert("⚠️ Camera access required for face verification");
+    return false;
+  }
+}
+
+// ========== CAPTURE FACE DESCRIPTOR ==========
+async function captureFaceDescriptor(videoElement) {
+  console.log("🎯 Starting face descriptor capture...");
+  
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const detection = await faceapi
+        .detectSingleFace(videoElement)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      
+      if (detection && detection.descriptor) {
+        // Convert to proper array
+        const descriptor = Array.from(detection.descriptor);
+        
+        // 🔍 Validate descriptor
+        console.log(`✅ Attempt ${attempt + 1}: Descriptor captured`, {
+          type: typeof descriptor,
+          isArray: Array.isArray(descriptor),
+          length: descriptor.length,
+          first3: descriptor.slice(0, 3),
+          hasNaN: descriptor.some(v => isNaN(v))
+        });
+        
+        // Ensure it's exactly 128 numbers
+        if (Array.isArray(descriptor) && descriptor.length === 128 && !descriptor.some(v => isNaN(v))) {
+          console.log("✅ Valid 128-element descriptor!");
+          return descriptor;
+        } else {
+          console.warn("⚠️ Invalid descriptor format, retrying...");
+        }
+      } else {
+        console.warn(`⚠️ Attempt ${attempt + 1}: No face detected`);
+      }
+    } catch (err) {
+      console.error(`❌ Attempt ${attempt + 1} error:`, err.message);
+    }
+    
+    await new Promise(res => setTimeout(res, 300));
+  }
+  
+  console.error("❌ Failed to capture valid descriptor after 5 attempts");
+  return null;
+}
+
+// ========== VERIFY FACE AGAINST SIGNUP ==========
+async function verifyFace(currentDescriptor) {
+  // 🔍 CRITICAL VALIDATION
+  console.log("🔐 verifyFace() - Input validation:", {
+    email: studentEmail,
+    emailType: typeof studentEmail,
+    descriptor: currentDescriptor,
+    descriptorType: typeof currentDescriptor,
+    isArray: Array.isArray(currentDescriptor),
+    length: Array.isArray(currentDescriptor) ? currentDescriptor.length : "N/A",
+    hasNaN: Array.isArray(currentDescriptor) ? currentDescriptor.some(v => isNaN(v)) : "N/A"
+  });
+  
+  // Validate BEFORE sending
+  if (!studentEmail) {
+    console.error("❌ Email is missing!");
+    return false;
+  }
+  
+  if (!currentDescriptor || !Array.isArray(currentDescriptor)) {
+    console.error("❌ Descriptor is not an array!");
+    return false;
+  }
+  
+  if (currentDescriptor.length !== 128) {
+    console.error(`❌ Descriptor length is ${currentDescriptor.length}, expected 128!`);
+    return false;
+  }
+  
+  if (currentDescriptor.some(v => typeof v !== 'number' || isNaN(v))) {
+    console.error("❌ Descriptor contains invalid numbers (NaN or non-number)!");
+    return false;
+  }
+  
+  try {
+    const res = await fetch("/verify-face", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: studentEmail,
+        descriptor: currentDescriptor,
+        sessionId: quizId
+      })
+    });
+    
+    const result = await res.json();
+    
+    console.log("📡 verify-face response:", {
+      status: res.status,
+      verified: result.verified,
+      confidence: result.confidence,
+      distance: result.distance,
+      message: result.message
+    });
+    
+    return result.verified;
+  } catch (err) {
+    console.error("❌ Verification request failed:", err);
+    return false;
+  }
+}
+
+// ========== INITIAL VERIFICATION (Before Quiz Starts) ==========
+async function initialFaceVerification() {
+  const overlay = document.getElementById("faceVerification");
+  const status = document.getElementById("verifyStatus");
+  const video = document.getElementById("verifyVideo");
+  
+  // Step 1: Load models
+  status.innerText = "📦 Loading face models...";
+  if (!await loadFaceModels()) return false;
+  
+  // Step 2: Start camera
+  status.innerText = "📹 Starting camera...";
+  if (!await startCamera(video)) return false;
+  
+  // Step 3: Wait for face detection
+  status.innerText = "👤 Detecting face... Please look at camera";
+  await new Promise(res => setTimeout(res, 1000));
+  
+  // Step 4: Capture descriptor
+  const descriptor = await captureFaceDescriptor(video);
+  if (!descriptor) {
+    status.innerHTML = "❌ Face not detected. <a href='#' onclick='location.reload()'>Retry</a>";
+    status.classList.add("error");
+    return false;
+  }
+  
+  // Step 5: Verify against signup
+  status.innerText = "🔐 Verifying identity...";
+  const isVerified = await verifyFace(descriptor);
+  
+  if (isVerified) {
+    status.innerText = "✅ Identity verified! Starting quiz...";
+    status.style.color = "#00ff88";
+    
+    // Stop verification camera
+    const stream = video.srcObject;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    
+    // Hide overlay and start quiz
+    setTimeout(() => {
+      overlay.style.display = "none";
+      startQuiz();
+      startBackgroundVerification();
+    }, 1500);
+    
+    return true;
+  } else {
+    status.innerHTML = "❌ Identity mismatch! <br><small>This face doesn't match your registration.</small>";
+    status.classList.add("error");
+    
+    // Optional: Redirect after failure
+    setTimeout(() => {
+      alert("⚠️ Verification failed. Please contact support.");
+      location.href = "/student.html";
+    }, 3000);
+    
+    return false;
+  }
+}
+
+// ========== BACKGROUND VERIFICATION (During Quiz) ==========
+async function startBackgroundVerification() {
+  const bgVideo = document.getElementById("bgVideo");
+  
+  // Start hidden camera
+  await startCamera(bgVideo);
+  
+  // Periodic verification
+  verifyInterval = setInterval(async () => {
+    const statusEl = document.getElementById("liveVerifyStatus");
+    
+    try {
+      const descriptor = await captureFaceDescriptor(bgVideo);
+      
+      if (!descriptor) {
+        statusEl.innerText = "⚠️ Face not visible";
+        statusEl.style.color = "#ffaa00";
+        return;
+      }
+      
+      const isVerified = await verifyFace(descriptor);
+      
+      if (isVerified) {
+        statusEl.innerText = "✅ Verified";
+        statusEl.style.color = "#00ff88";
+      } else {
+        statusEl.innerText = "❌ Mismatch!";
+        statusEl.style.color = "#ff4d4d";
+        
+        // Optional: Warn user or auto-submit quiz
+        alert("⚠️ Face verification failed! Quiz may be submitted automatically.");
+        // submitQuiz(); // Uncomment to auto-submit on mismatch
+      }
+    } catch (err) {
+      console.error("Background verification error:", err);
+      statusEl.innerText = "⚠️ Error";
+    }
+  }, VERIFY_INTERVAL);
+}
+
+// ========== TIMER ==========
+timerInterval = setInterval(() => {
+  const min = Math.floor(timeLeft / 60);
+  const sec = timeLeft % 60;
+  document.getElementById("timer").innerText =
+    `⏱ ${min}:${sec.toString().padStart(2, "0")}`;
+
+  if (timeLeft-- <= 0) {
+    clearInterval(timerInterval);
+    submitQuiz();
+  }
+}, 1000);
+
+// ========== LOAD QUIZ ==========
+async function loadQuiz() {
+  try {
+    const res = await fetch(`/api/quiz/${quizId}`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+    
+    if (!res.ok) throw new Error("Failed to load quiz");
+    
+    quizData = await res.json();
+    document.getElementById("quizTitle").innerText = quizData.title;
+
+    const body = document.getElementById("quizBody");
+    body.innerHTML = "";
+
+    quizData.questions.forEach((q, i) => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <div class="question"><b>Q${i + 1}. ${q.question}</b></div>
+        ${q.options.map(opt => `
+          <label class="option">
+            <input type="radio" name="q${i}" value="${opt.trim()}">
+            ${opt}
+          </label>
+        `).join("")}
+      `;
+      body.appendChild(div);
+    });
+  } catch (err) {
+    console.error("❌ Error loading quiz:", err);
+    document.getElementById("quizBody").innerHTML = 
+      "<p style='color:#ff4d4d'>❌ Failed to load quiz. Please try again.</p>";
+  }
+}
+
+// ========== START QUIZ (Called after verification) ==========
+function startQuiz() {
+  loadQuiz();
+  console.log("🚀 Quiz started with face verification enabled");
+}
+
+// ========== SUBMIT QUIZ ==========
+async function submitQuiz() {
+  console.log("📝 Submitting quiz...");
+  
+  // 1. Stop Timers & Verification
+  clearInterval(timerInterval);
+  clearInterval(verifyInterval);
+  
+  // 2. Stop Video Streams
+  ["verifyVideo", "bgVideo"].forEach(id => {
+    const video = document.getElementById(id);
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+    }
+  });
+
+  // 3. Calculate Score (with safety check)
+  let score = 0;
+  if (!quizData || !quizData.questions) {
+    alert("❌ Quiz data missing. Cannot calculate score.");
+    return;
+  }
+
+  quizData.questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected && selected.value.trim().toLowerCase() === q.answer.trim().toLowerCase()) {
+      score++;
+    }
+  });
+
+  // 4. Send to Backend
+  try {
+    await fetch("/api/submit-quiz-result", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        quizId,
+        score,
+        total: quizData.questions.length
+      })
+    });
+    console.log("✅ Quiz result submitted successfully");
+  } catch (err) {
+    console.error("❌ Failed to submit quiz:", err);
+    // Continue anyway to show results to user
+  }
+
+  // 5. Display Results WITH Back to Dashboard Button
+  const resultDiv = document.getElementById("result");
+  const submitBtn = document.getElementById("submitBtn");
+  const quizBody = document.getElementById("quizBody");
+
+  if (!resultDiv) {
+    console.error("❌ ERROR: <div id='result'> not found in HTML!");
+    alert("Error displaying results. Please go back to dashboard.");
+    return;
+  }
+
+  // Hide question body and submit button
+  if (quizBody) quizBody.innerHTML = "";
+  if (submitBtn) submitBtn.style.display = "none";
+
+  // Determine feedback message
+  const total = quizData.questions.length;
+  const percentage = total > 0 ? (score / total) * 100 : 0;
+  let message = "";
+  let emoji = "";
+
+  if (percentage === 100) {
+    emoji = "🏆"; message = "Perfect Score!";
+  } else if (percentage >= 70) {
+    emoji = "👍"; message = "Great Job!";
+  } else if (percentage >= 50) {
+    emoji = "🙂"; message = "Good Effort!";
+  } else {
+    emoji = "💪"; message = "Keep Practicing!";
+  }
+
+  // Inject HTML with buttons
+  resultDiv.innerHTML = `
+    <div class="fade-in" style="text-align:center; padding:30px;">
+      <h2 style="color:#00ff88; margin-bottom:15px; font-size:28px;">🎉 Quiz Completed!</h2>
+      
+      <div style="background:rgba(255,255,255,0.1); padding:20px; border-radius:15px; display:inline-block; margin-bottom:20px;">
+        <p style="font-size:18px; color:#ccc; margin:0;">Your Score</p>
+        <p style="font-size:32px; font-weight:bold; color:#ffcc00; margin:10px 0;">
+          ${score} <span style="font-size:20px; color:#fff;">/ ${total}</span>
+        </p>
+        <p style="color:#00ffcc; font-weight:bold;">${emoji} ${message}</p>
+      </div>
+
+      <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+        <!-- ✅ BACK TO DASHBOARD BUTTON -->
+        <button onclick="goToDashboard()" 
+                style="background:linear-gradient(135deg, #38bdf8, #862481); 
+                       color:white; 
+                       border:none; 
+                       padding:14px 28px; 
+                       border-radius:25px; 
+                       font-size:16px; 
+                       font-weight:bold;
+                       cursor:pointer;
+                       box-shadow: 0 4px 15px rgba(134, 36, 129, 0.4);">
+          📊 Back to Dashboard
+        </button>
+        
+        <!-- Optional: Retake Quiz Button -->
+        <button onclick="location.reload()" 
+                style="background:transparent; 
+                       color:#fff; 
+                       border:2px solid #862481; 
+                       padding:12px 26px; 
+                       border-radius:25px; 
+                       font-size:16px; 
+                       font-weight:bold;
+                       cursor:pointer;">
+          🔄 Retake Quiz
+        </button>
+      </div>
+      
+      <p style="margin-top:20px; color:#666; font-size:14px;">
+        Redirecting automatically in 15 seconds...
+      </p>
+    </div>
+  `;
+
+  // Optional: Auto-redirect after 15 seconds
+  setTimeout(() => {
+    // Only redirect if user hasn't clicked anything
+    if (resultDiv.innerHTML.includes("Back to Dashboard")) {
+      goToDashboard();
+    }
+  }, 15000);
+}
+
+// ========== EVENT LISTENERS ==========
+document.getElementById("submitBtn").onclick = submitQuiz;
+
+// ========== INITIALIZATION ==========
+if (!token) {
+  alert("Login required");
+  location.href = "/login.html";
+} else {
+  // Start face verification first, then quiz
+  initialFaceVerification();
+}
+</script>
+
+</body>
+</html>

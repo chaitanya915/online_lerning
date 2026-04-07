@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Details</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background:#0b0c2a; color:#fff; }
+    h1 { color: #ffb6ff; }
+    .content-box { background:#1a1c4d; padding:15px; margin-bottom:20px; border-radius:10px; }
+    video { display: block; margin-top: 10px; max-width: 600px; border-radius:8px; }
+    h3 { margin:0; color:#ffda6a; }
+    p { margin:5px 0; }
+  </style>
+</head>
+<body>
+
+  <h1 id="courseTitle">Course Title</h1>
+  <p id="courseDesc"></p>
+  <div id="contents"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('id'); // Make sure your button uses ?id=COURSE_ID
+    const token = localStorage.getItem("token");
+
+    if (!courseId || !token) {
+      alert("Invalid course or not logged in.");
+      location.href = "student-dashboard.html";
+    }
+
+    fetch(`/api/course/${courseId}`, {
+      headers: { Authorization: "Bearer " + token }
+    })
+      .then(res => res.json())
+      .then(course => {
+        document.getElementById("courseTitle").innerText = course.title || "Untitled Course";
+        document.getElementById("courseDesc").innerText = course.desc || "";
+
+        const container = document.getElementById("contents");
+        container.innerHTML = "";
+
+        if (course.contents && course.contents.length > 0) {
+          course.contents.forEach(c => {
+            const div = document.createElement("div");
+            div.className = "content-box";
+            div.innerHTML = `
+              <h3>${c.title}</h3>
+              <p>${c.description || ""}</p>
+              <video controls>
+                <source src="${c.videoUrl}" type="video/mp4">
+              </video>
+            `;
+            container.appendChild(div);
+          });
+        } else {
+          container.innerHTML = "<p>No content uploaded yet.</p>";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Failed to load course details.");
+      });
+  </script>
+</body>
+</html>
