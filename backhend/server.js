@@ -60,7 +60,7 @@ app.use("/api/discussions", discussionRoutes);
 
 // ✅ Connect MongoDB
 mongoose
-  .connect(process.env.MONGO_URI || "mongodb+srv://<appuser123>:<appuser123>@cluster0.yiofgea.mongodb.net/sspm", {
+  .connect(process.env.MONGO_URI || "mongodb+srv://appuser123:appuser123@cluster0.yiofgea.mongodb.net/sspm", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
