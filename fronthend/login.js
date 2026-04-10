@@ -7,7 +7,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     role: document.getElementById("role").value
   };
 
-  const res = await fetch("http://192.168.1.100:5000/login", {
+  const res = await fetch("https://online-lerning123.onrender.com", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)

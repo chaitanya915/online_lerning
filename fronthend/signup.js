@@ -1,4 +1,4 @@
-const API_URL = "https://online-learning-api.onrender.com";
+const API_URL = "https://online-lerning123.onrender.com";
 
 const res = await fetch(`${API_URL}/signup`, {
   method: "POST",
@@ -91,7 +91,7 @@ document.getElementById("studentForm").addEventListener("submit", async (e) => {
       faceDescriptor: JSON.parse(faceData)
     };
 
-    const API_URL = "https://online-learning-api.onrender.com";
+    
 
 const res = await fetch(`${API_URL}/signup`, {
   method: "POST",
