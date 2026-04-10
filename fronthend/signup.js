@@ -1,3 +1,11 @@
+const API_URL = "https://online-learning-api.onrender.com";
+
+const res = await fetch(`${API_URL}/signup`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data)
+});
+
 // ========== INSTRUCTOR FORM SUBMISSION WITH FACE RECOGNITION ==========
 document.getElementById("instructorForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -83,11 +91,13 @@ document.getElementById("studentForm").addEventListener("submit", async (e) => {
       faceDescriptor: JSON.parse(faceData)
     };
 
-    const res = await fetch("/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
+    const API_URL = "https://online-learning-api.onrender.com";
+
+const res = await fetch(`${API_URL}/signup`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data)
+});
 
     const result = await res.json();
     
