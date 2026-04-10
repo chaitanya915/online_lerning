@@ -275,6 +275,12 @@ async function startCamera(role) {
   }
 }
 
+const MODEL_URL = "https://sspm-online-lerning.onrender.com/models";
+
+await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
 // ✅ STOP CAMERA: Clean up resources
 function stopCamera(role) {
   const video = document.getElementById(`video${role.charAt(0).toUpperCase() + role.slice(1)}`);
