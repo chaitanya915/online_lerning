@@ -36,7 +36,7 @@ document.getElementById("instructorForm").addEventListener("submit", async (e) =
     }
 
   } catch (err) {
-    alert("Network error");
+    alert("server error");
   }
 });
 
@@ -79,6 +79,6 @@ document.getElementById("studentForm").addEventListener("submit", async (e) => {
     }
 
   } catch (err) {
-    alert("Network error");
+    alert("Server error");
   }
 });
